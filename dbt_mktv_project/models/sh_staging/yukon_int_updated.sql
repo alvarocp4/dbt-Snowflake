@@ -1,0 +1,38 @@
+SELECT
+    TO_NUMBER(NUMBER_INTEGRATION_ID) AS NUMBER_INTEGRATION_ID,
+    EVENT_DATETIME,
+    CONVERT_TIMEZONE('UTC', 'Europe/Madrid',
+        TRY_TO_TIMESTAMP_LTZ(
+            COALESCE(PARSE_JSON(LEADGEN_DATA):"leadGenerationTimeStamp"::STRING, ''),
+            'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+        )
+    )                                                           AS FEC_CREACION_PROSPECTO,
+    PARSE_JSON(OWNERSHIP):"costCenter"::VARCHAR                 AS COST_CENTER_RAW,
+    LAST_VALUE(
+        CASE WHEN PARSE_JSON(OWNERSHIP):"costCenter"::VARCHAR NOT IN ('89', '892')
+             THEN PARSE_JSON(OWNERSHIP):"costCenter"::VARCHAR
+        END
+    ) IGNORE NULLS
+    OVER (
+        PARTITION BY NUMBER_INTEGRATION_ID
+        ORDER BY EVENT_DATETIME
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+    )                                                           AS COST_CENTER_PREV,
+    LAST_VALUE(
+        CASE WHEN PARSE_JSON(OWNERSHIP):"costCenter"::VARCHAR NOT IN ('89')
+             THEN PARSE_JSON(OWNERSHIP):"costCenter"::VARCHAR
+        END
+    ) IGNORE NULLS
+    OVER (
+        PARTITION BY NUMBER_INTEGRATION_ID
+        ORDER BY EVENT_DATETIME
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+    )                                                           AS COST_CENTER_PREV_KEEP892,
+    STATUS_NAME                                                 AS STATUS
+FROM {{ source('minerva', 'YUKON_OPPORTUNITY_UPDATED_ES') }}
+WHERE NUMBER_INTEGRATION_ID IS NOT NULL
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY NUMBER_INTEGRATION_ID
+    ORDER BY EVENT_DATETIME DESC
+) = 1
+ORDER BY NUMBER_INTEGRATION_ID DESC

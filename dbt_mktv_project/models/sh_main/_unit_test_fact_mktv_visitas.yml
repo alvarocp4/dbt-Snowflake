@@ -1,0 +1,65 @@
+unit_tests:
+  - name: test_cost_center_logic
+    description: "Validates COST_CENTER logic: when cost_center=89 use COST_CENTER_PREV, when 892 and TLVANU/DueToOpp use COST_CENTER_PREV, otherwise use COALESCE priority chain"
+    model: fact_mktv_visitas
+    given:
+      - input: ref('yukon_int_created')
+        rows:
+          # Caso 1: cost_center=89 → debe usar COST_CENTER_PREV de updated
+          - {NUMBER_INTEGRATION_ID: '1', FEC_CREACION_PROSPECTO: '2026-01-01', CREATION_DATETIME: '2026-01-01', OPPORTUNITY_NUMBER: 'OPP1', OPPORTUNITY_ID: 'OPP1', UNIQUE_INTENDER_ID: 'UI1', OWNERSHIP_CHANNEL: 'Direct', OWNERSHIP_SUBCHANNEL: 'Telebooking', ZIP_CODE: '28001', SEGMENT: 'SEG1', SEGMENT_SUBTYPE: 'SUB1', END_CONSTRUCTION_DATE: null, ACD_DESCRIPTION: null, STATUS_NAME: 'CREATED', COST_CENTER: '89', ASSSIGNED_USER: 'USER1', EVENT_DATETIME: '2026-01-01'}
+          # Caso 2: cost_center=892 + TLVANU → debe usar COST_CENTER_PREV
+          - {NUMBER_INTEGRATION_ID: '2', FEC_CREACION_PROSPECTO: '2026-01-01', CREATION_DATETIME: '2026-01-01', OPPORTUNITY_NUMBER: 'OPP2', OPPORTUNITY_ID: 'OPP2', UNIQUE_INTENDER_ID: 'UI2', OWNERSHIP_CHANNEL: 'Direct', OWNERSHIP_SUBCHANNEL: 'Telebooking', ZIP_CODE: '28002', SEGMENT: 'SEG1', SEGMENT_SUBTYPE: 'SUB1', END_CONSTRUCTION_DATE: null, ACD_DESCRIPTION: null, STATUS_NAME: 'CREATED', COST_CENTER: '892', ASSSIGNED_USER: 'TLVANU', EVENT_DATETIME: '2026-01-01'}
+          # Caso 3: cost_center normal → usa el valor directamente
+          - {NUMBER_INTEGRATION_ID: '3', FEC_CREACION_PROSPECTO: '2026-01-01', CREATION_DATETIME: '2026-01-01', OPPORTUNITY_NUMBER: 'OPP3', OPPORTUNITY_ID: 'OPP3', UNIQUE_INTENDER_ID: 'UI3', OWNERSHIP_CHANNEL: 'Direct', OWNERSHIP_SUBCHANNEL: 'Telebooking', ZIP_CODE: '28003', SEGMENT: 'SEG1', SEGMENT_SUBTYPE: 'SUB1', END_CONSTRUCTION_DATE: null, ACD_DESCRIPTION: null, STATUS_NAME: 'CREATED', COST_CENTER: '100', ASSSIGNED_USER: 'USER3', EVENT_DATETIME: '2026-01-01'}
+          # Caso 4: offersent con cost_center válido → usa offersent
+          - {NUMBER_INTEGRATION_ID: '4', FEC_CREACION_PROSPECTO: '2026-01-01', CREATION_DATETIME: '2026-01-01', OPPORTUNITY_NUMBER: 'OPP4', OPPORTUNITY_ID: 'OPP4', UNIQUE_INTENDER_ID: 'UI4', OWNERSHIP_CHANNEL: 'Direct', OWNERSHIP_SUBCHANNEL: 'Telebooking', ZIP_CODE: '28004', SEGMENT: 'SEG1', SEGMENT_SUBTYPE: 'SUB1', END_CONSTRUCTION_DATE: null, ACD_DESCRIPTION: null, STATUS_NAME: 'CREATED', COST_CENTER: '200', ASSSIGNED_USER: 'USER4', EVENT_DATETIME: '2026-01-01'}
+
+      - input: ref('yukon_int_booked')
+        rows: []
+
+      - input: ref('yukon_int_assigned')
+        rows: []
+
+      - input: ref('yukon_int_updated')
+        rows:
+          # Caso 1: tiene COST_CENTER_PREV = '101' para cuando raw=89
+          - {NUMBER_INTEGRATION_ID: '1', COST_CENTER_RAW: '89', COST_CENTER_PREV: '101', COST_CENTER_PREV_KEEP892: '101', FEC_CREACION_PROSPECTO: '2026-01-01', STATUS: 'UPDATED', EVENT_DATETIME: '2026-01-01'}
+          # Caso 2: tiene COST_CENTER_PREV = '202' para cuando raw=892 + TLVANU
+          - {NUMBER_INTEGRATION_ID: '2', COST_CENTER_RAW: '892', COST_CENTER_PREV: '202', COST_CENTER_PREV_KEEP892: '892', FEC_CREACION_PROSPECTO: '2026-01-01', STATUS: 'UPDATED', EVENT_DATETIME: '2026-01-01'}
+          # Caso 3: cost_center normal
+          - {NUMBER_INTEGRATION_ID: '3', COST_CENTER_RAW: '100', COST_CENTER_PREV: null, COST_CENTER_PREV_KEEP892: null, FEC_CREACION_PROSPECTO: '2026-01-01', STATUS: 'UPDATED', EVENT_DATETIME: '2026-01-01'}
+          # Caso 4: cost_center normal
+          - {NUMBER_INTEGRATION_ID: '4', COST_CENTER_RAW: '200', COST_CENTER_PREV: null, COST_CENTER_PREV_KEEP892: null, FEC_CREACION_PROSPECTO: '2026-01-01', STATUS: 'UPDATED', EVENT_DATETIME: '2026-01-01'}
+
+      - input: ref('yukon_int_installed')
+        rows: []
+
+      - input: ref('yukon_int_closed')
+        rows: []
+
+      - input: ref('yukon_int_offersent')
+        rows:
+          # Caso 4: offersent con cost_center válido (no 89 ni 892)
+          - {NUMBER_INTEGRATION_ID: '4', COST_CENTER: '300', USER_ID: 'USER4', STATUS: 'OFFER_SENT', EVENT_DATETIME: '2026-01-01'}
+
+      - input: source('minerva', 'YUKON_OPPORTUNITY_CLOSED_ES')
+        rows: []
+
+      - input: source('minerva', 'YUKON_OPPORTUNITY_CREATED_ES')
+        rows:
+          # Caso 2: TLVANU en CREATED para que aparezca en TLVANU_PROSPECTOS
+          - {NUMBER_INTEGRATION_ID: '2', OWNERSHIP: '{"ownerUserId": "TLVANU"}', OPPORTUNITY_NUMBER: 'OPP2', EVENT_DATETIME: '2026-01-01', LEAD_GENERATION_DATETIME: '2026-01-01', OWNERSHIP_CHANNEL: 'Direct', OWNERSHIP_SUBCHANNEL: 'Telebooking', CREATION_DATETIME: '2026-01-01'}
+
+      - input: source('minerva', 'YUKON_OFFER_SENT_ES')
+        rows: []
+
+    expect:
+      rows:
+        # Caso 1: cost_center=89 → COST_CENTER_PREV = '101'
+        - {ID_PROSPECTO: '1', COST_CENTER: '101'}
+        # Caso 2: cost_center=892 + TLVANU → COST_CENTER_PREV = '202'
+        - {ID_PROSPECTO: '2', COST_CENTER: '202'}
+        # Caso 3: cost_center normal → '100'
+        - {ID_PROSPECTO: '3', COST_CENTER: '100'}
+        # Caso 4: offersent con cost_center válido → '300' (offersent tiene prioridad)
+        - {ID_PROSPECTO: '4', COST_CENTER: '300'}

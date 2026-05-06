@@ -1,0 +1,103 @@
+version: 2
+
+sources:
+  - name: minerva
+    database: DB_MINERVA
+    schema: SH_STAGING 
+    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+    tags: [origen, minerva]
+    freshness:
+      warn_after:
+        count: 24
+        period: hour 
+    tables:
+      - name: YUKON_OPPORTUNITY_CREATED_ES
+        description: "Tabla con las Oportunidades creadas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador único de la Oportunidad"
+            data_tests:
+              - unique
+              - not_null
+      - name: YUKON_VISIT_BOOKED_ES
+        description: "Tabla con los Prospectos con Visitas reservadas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+          - name: number_integration_id
+            description: "Identificador de la Visita"
+            data_tests:
+              - not_null
+      - name: YUKON_VISIT_ASSIGNED_ES
+        description: "Tabla con los Prospectos con Visitas asignadas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+          - name: number_integration_id
+            description: "Identificador de la Visita"
+            data_tests:
+              - not_null
+      - name: YUKON_OPPORTUNITY_UPDATED_ES
+        description: "Tabla de las actualizaciones de las Oportunidades"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+      - name: YUKON_OPPORTUNITY_INSTALLED_ES
+        description: "Tabla con las Oportunidades Instaladas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+          - name: installation_code
+            description: "Identificador de la Instalacion"
+            data_tests:
+              - not_null
+      - name: YUKON_OPPORTUNITY_CLOSED_ES
+        description: "Tabla con las Oportunidades cerradas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+      - name: YUKON_OFFER_SENT_ES
+        description: "Tabla con los Prospectos con Ofertas enviadas"
+        tags: [yukon]
+        columns:
+          - name: opportunity_number
+            description: "Identificador de la Oportunidad"
+            data_tests:
+              - not_null
+          - name: number_integration_id
+            description: "Identificador de la Visita"
+            data_tests:
+              - not_null
+
+  - name: odin
+    database: DB_ODIN
+    schema: SH_STAGING
+    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+    tags: [origen, odin]
+    freshness:
+      warn_after:
+        count: 24
+        period: hour
+    tables:
+      - name: SRC_MKTV_CAMPANIAS
+        description: "Tabla Maestra con las Campañas"
+        tags: [odin]
+      - name: SRC_MKTV_ORIGENES
+        description: "Tabla Maestra con los Orígenes"
+        tags: [odin]

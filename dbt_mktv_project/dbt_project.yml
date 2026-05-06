@@ -1,0 +1,31 @@
+name: dbt_mktv_project
+version: 1.0.0
+config-version: 2
+profile: dbt_mktv_project
+model-paths:
+  - models
+analysis-paths:
+  - analyses
+test-paths:
+  - tests
+seed-paths:
+  - seeds
+macro-paths:
+  - macros
+snapshot-paths:
+  - snapshots
+models:
+  dbt_mktv_project:
+    sh_staging:
+      +database: DB_MARKETING
+      +schema: SH_STAGING
+      +tags: staging
+      +materialized: view
+    sh_main:
+      +database: DB_MARKETING
+      +schema: SH_MAIN
+      +tags: main
+      +materialized: table
+  elementary:
+    +database: DB_MARKETING
+    +schema: SH_STAGING

@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: yukon_int_created
+    description: "View con las Oportunidades creadas conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: opportunity_number
+        description: "Identificador único de la Oportunidad"
+        tests:
+          - not_null
+          - unique
+  - name: yukon_int_booked
+    description: "View con las Visitas reservadas de oportunidades conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: opportunity_number
+        description: "Identificador único de la Oportunidad"
+        tests:
+          - not_null
+      - name: number_integration_id
+        description: "Identificador de la Visita"
+        tests:
+          - not_null
+  - name: yukon_int_assigned
+    description: "View con las Visitas asignadas de oportunidades conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: number_integration_id
+        description: "Identificador de la Visita"
+        tests:
+          - not_null
+  - name: yukon_int_updated
+    description: "View con las Oportunidades actualizadas conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: number_integration_id
+        description: "Identificador único de la Visita"
+        tests:
+          - not_null
+  - name: yukon_int_installed
+    description: "View con las Oportunidades instaladas conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: number_integration_id
+        description: "Identificador único de la Visita"
+        tests:
+          - not_null
+      - name: installation_code
+        description: "Identificador de la Instalacion"
+        tests:
+          - not_null
+  - name: yukon_int_closed
+    description: "View con las Oportunidades cerradas conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: opportunity_number
+        description: "Identificador único de la Oportunidad"
+        tests:
+          - not_null
+  - name: yukon_int_offersent
+    description: "View con las Ofertas enviadas conservando el último Prospecto"
+    config:
+      tags: [sh_staging, yukon]
+    columns:
+      - name: number_integration_id
+        description: "Identificador de la Visita"
+        tests:
+          - not_null
