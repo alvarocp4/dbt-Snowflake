@@ -42,6 +42,9 @@ unit_tests:
           # Caso 4: offersent con cost_center válido (no 89 ni 892)
           - {NUMBER_INTEGRATION_ID: '4', COST_CENTER: '300', USER_ID: 'USER4', STATUS: 'OFFER_SENT', EVENT_DATETIME: '2026-01-01'}
 
+      - input: source('odin_main', 'D_USER_MNT')
+        rows: []
+        
       - input: source('minerva', 'YUKON_OPPORTUNITY_CLOSED_ES')
         rows: []
 
