@@ -2,6 +2,3 @@
 # packages:
 #   - package: Snowflake-Labs/dbt_semantic_view
 #     version: 1.0.3
-packages:
-  - package: elementary-data/elementary
-    version: 0.16.1

@@ -26,6 +26,3 @@ models:
       +schema: SH_MAIN
       +tags: main
       +materialized: table
-  elementary:
-    +database: DB_MARKETING
-    +schema: SH_STAGING

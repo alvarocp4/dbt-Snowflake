@@ -85,11 +85,11 @@ sources:
             data_tests:
               - not_null
 
-  - name: odin
+  - name: odin_staging
     database: DB_ODIN
     schema: SH_STAGING
     loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
-    tags: [origen, odin]
+    tags: [origen, odin, odin_staging]
     freshness:
       warn_after:
         count: 24
@@ -97,7 +97,31 @@ sources:
     tables:
       - name: SRC_MKTV_CAMPANIAS
         description: "Tabla Maestra con las Campañas"
-        tags: [odin]
+        tags: [odin, leads]
       - name: SRC_MKTV_ORIGENES
         description: "Tabla Maestra con los Orígenes"
-        tags: [odin]
+        tags: [odin, origen]
+
+  - name: odin_main
+    database: DB_ODIN
+    schema: SH_MAIN
+    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+    tags: [origen, odin, odin_main]
+    freshness:
+      warn_after:
+        count: 24
+        period: hour
+    tables:
+      - name: D_USER_MNT
+        description: "Tabla Maestra con las matriculas de los usuarios"
+        tags: [odin, leads]
+        columns:
+          - name: usr_matricula_responsable
+            description: "Matricula"
+            data_tests:
+              - not_null
+          - name: matricula
+            description: "Matricula"
+            data_tests:
+              - not_null
+              - unique
