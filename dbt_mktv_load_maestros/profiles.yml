@@ -1,0 +1,10 @@
+dbt_mktv_load_maestros:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      role: '"AZ-SF-MKT-CAPTA-ES-DEPLOYER"'
+      warehouse: VWH_MKT_CAPTA_ES
+      database: DB_MARKETING
+      schema: SH_STAGING
+      threads: 8

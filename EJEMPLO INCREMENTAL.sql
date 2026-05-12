@@ -70,3 +70,5 @@ VALUES (
 
 -- 2. DELETE THE RECORD FOR CLEAN DATASET
 DELETE FROM DB_MINERVA.SH_STAGING.YUKON_OPPORTUNITY_CLOSED_ES WHERE NUMBER_INTEGRATION_ID='13906314';
+--======================================--
+--======================================--
