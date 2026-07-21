@@ -11,7 +11,7 @@ sources:
         count: 24
         period: hour 
     tables:
-      - name: YUKON_OPPORTUNITY_CREATED_ES
+      - name: yukon_opportunity_created_es
         description: "Tabla con las Oportunidades creadas"
         tags: [yukon]
         columns:
@@ -20,7 +20,7 @@ sources:
             data_tests:
               - unique
               - not_null
-      - name: YUKON_VISIT_BOOKED_ES
+      - name: yukon_visit_booked_es
         description: "Tabla con los Prospectos con Visitas reservadas"
         tags: [yukon]
         columns:
@@ -32,7 +32,7 @@ sources:
             description: "Identificador de la Visita"
             data_tests:
               - not_null
-      - name: YUKON_VISIT_ASSIGNED_ES
+      - name: yukon_visit_assigned_es
         description: "Tabla con los Prospectos con Visitas asignadas"
         tags: [yukon]
         columns:
@@ -44,7 +44,7 @@ sources:
             description: "Identificador de la Visita"
             data_tests:
               - not_null
-      - name: YUKON_OPPORTUNITY_UPDATED_ES
+      - name: yukon_opportunity_updated_es
         description: "Tabla de las actualizaciones de las Oportunidades"
         tags: [yukon]
         columns:
@@ -52,7 +52,7 @@ sources:
             description: "Identificador de la Oportunidad"
             data_tests:
               - not_null
-      - name: YUKON_OPPORTUNITY_INSTALLED_ES
+      - name: yukon_opportunity_installed_es
         description: "Tabla con las Oportunidades Instaladas"
         tags: [yukon]
         columns:
@@ -64,7 +64,7 @@ sources:
             description: "Identificador de la Instalacion"
             data_tests:
               - not_null
-      - name: YUKON_OPPORTUNITY_CLOSED_ES
+      - name: yukon_opportunity_closed_es
         description: "Tabla con las Oportunidades cerradas"
         tags: [yukon]
         columns:
@@ -72,7 +72,7 @@ sources:
             description: "Identificador de la Oportunidad"
             data_tests:
               - not_null
-      - name: YUKON_OFFER_SENT_ES
+      - name: yukon_offer_sent_es
         description: "Tabla con los Prospectos con Ofertas enviadas"
         tags: [yukon]
         columns:
@@ -95,11 +95,32 @@ sources:
         count: 24
         period: hour
     tables:
-      - name: SRC_MKTV_CAMPANIAS
+      - name: src_mktv_maestros_acds
         description: "Tabla Maestra con las Campañas"
         tags: [odin, leads]
-      - name: SRC_MKTV_ORIGENES
+      - name: src_mktv_maestros_origenes
         description: "Tabla Maestra con los Orígenes"
+        tags: [odin, origen]
+      - name: src_altitude8_reportingdatosperfil
+        description: "Tabla Maestra con los Datos de perfil de Altitude8"
+        tags: [odin, origen]
+      - name: src_mktv_campana_crea_contactcenter
+        description: "Tabla Maestra con los Datos de Camapana de Creacion"
+        tags: [odin, origen]
+      - name: src_mktv_campains
+        description: "Tabla Maestra con los Datos de Camapana de Creacion"
+        tags: [odin, origen]
+      - name: src_mktv_jotforms
+        description: "Tabla Maestra con los Datos de Camapana de Creacion"
+        tags: [odin, origen]
+      - name: src_mktv_totalagentes
+        description: "Tabla Maestra con los Datos de Camapana de Creacion"
+        tags: [odin, origen]
+      - name: src_mktcap_campana
+        description: "Tabla Maestra con los Datos de Camapana de Creacion"
+        tags: [odin, origen]
+      - name: aux_altitude7_consultas
+        description: "Tabla Fact con los datos de las llamadas outbound"
         tags: [odin, origen]
 
   - name: odin_main
@@ -112,7 +133,7 @@ sources:
         count: 24
         period: hour
     tables:
-      - name: D_USER_MNT
+      - name: d_user_mnt
         description: "Tabla Maestra con las matriculas de los usuarios"
         tags: [odin, leads]
         columns:
@@ -125,3 +146,24 @@ sources:
             data_tests:
               - not_null
               - unique
+
+  - name: marketing
+    database: DB_MARKETING
+    schema: SH_MAIN
+    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+    tags: [origen, marketing, marketing]
+    freshness:
+      warn_after:
+        count: 24
+        period: hour
+    tables:
+      - name: fact_altitude8_reportingtotalcts
+        description: "Tabla Fact con la informacion cts"
+        tags: [odin, leads]
+      - name: fact_altitude7_outbound
+        description: "Tabla Fact con los datos de las llamadas outbound"
+        tags: [odin, origen]
+      - name: fact_altitude7_inbound
+        description: "Tabla Fact con los datos de las llamadas outbound"
+        tags: [odin, origen]
+      

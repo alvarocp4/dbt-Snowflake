@@ -1,16 +1,6 @@
 version: 2
 
 models:
-  - name: fact_mktv_visitas_trans
-    description: "Tabla con los datos de CREA y FOTO"
-    config:
-      tags: [sh_main, yukon]
-    columns:
-      - name: opportunity_number
-        description: "Identificador único de la Oportunidad"
-        tests:
-          - not_null
-          - unique
   - name: fact_mktv_visitas
     description: "Tabla con los datos de Visitas"
     config:
@@ -20,12 +10,12 @@ models:
         description: "Identificador único de la Oportunidad"
         tests:
           - not_null
-      - name: id_prospecto
+      - name: id_prospect
         description: "Identificador de la Visita"
         tests:
           - not_null
-  - name: tb_visitas
-    description: "Tabla con los datos de Visitas de Telebooking"
+  - name: fact_mktv_transt_visitas
+    description: "Tabla con los datos de Visitas"
     config:
       tags: [sh_main, yukon]
     columns:
@@ -33,36 +23,7 @@ models:
         description: "Identificador único de la Oportunidad"
         tests:
           - not_null
-      - name: id_prospecto
+      - name: id_prospect
         description: "Identificador de la Visita"
         tests:
           - not_null
-          - unique
-  - name: tc_visitas
-    description: "Tabla con los datos de Visitas de Teleclose"
-    config:
-      tags: [sh_main, yukon]
-    columns:
-      - name: opportunity_number
-        description: "Identificador único de la Oportunidad"
-        tests:
-          - not_null
-      - name: id_prospecto
-        description: "Identificador de la Visita"
-        tests:
-          - not_null
-          - unique
-  - name: ts_visitas
-    description: "Tabla con los datos de Visitas de Telesales"
-    config:
-      tags: [sh_main, yukon]
-    columns:
-      - name: opportunity_number
-        description: "Identificador único de la Oportunidad"
-        tests:
-          - not_null
-      - name: id_prospecto
-        description: "Identificador de la Visita"
-        tests:
-          - not_null
-          - unique

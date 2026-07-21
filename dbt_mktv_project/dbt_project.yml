@@ -16,6 +16,9 @@ snapshot-paths:
   - snapshots
 models:
   dbt_mktv_project:
+    +persist_docs:
+      relation: true
+      columns: true
     sh_staging:
       +database: DB_MARKETING
       +schema: SH_STAGING
@@ -25,4 +28,12 @@ models:
       +database: DB_MARKETING
       +schema: SH_MAIN
       +tags: main
-      +materialized: table
+      +materialized: incremental
+      +incremental_strategy: merge
+      +on_schema_change: sync_all_columns
+      +unique_key: ['id_prospect']
+      +pre-hook:  "{{ control_carga_tablas('start') }}"
+      +post-hook: "{{ control_carga_tablas('end') }}"
+
+on-run-end:
+  - "{{ control_carga_tablas('cleanup') }}"
