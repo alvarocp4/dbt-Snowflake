@@ -1,0 +1,71 @@
+[0m08:33:04  Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000187782EE5D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001877B59A780>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001877B61BFE0>]}
+[0m08:33:04  Running with dbt=1.11.7
+[0m08:33:04  running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'printer_width': '80', 'write_json': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'empty': 'False', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'True', 'log_format': 'default', 'profiles_dir': 'C:\\Users\\alvaro.carmona\\.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'use_colors': 'True', 'indirect_selection': 'eager', 'invocation_command': 'dbt build --debug', 'use_experimental_parser': 'False', 'log_path': 'C:\\Users\\alvaro.carmona\\OneDrive - Lognext\\Escritorio\\Yukon\\dbt-Snowflake\\dbt_mktv_project\\logs'}
+[0m08:33:04  Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m08:33:04  Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m08:33:04  Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m08:33:04  Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '1c230072-f176-4eed-8031-55d3e1dcc9dd', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001871DCCF9E0>]}
+[0m08:33:04  Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '1c230072-f176-4eed-8031-55d3e1dcc9dd', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001871DE59790>]}
+[0m08:33:04  Registered adapter: snowflake=1.11.3
+[0m08:33:05  checksum: b80718358155fc17c3559352095564dd56ada1cc1a1c0ef2e62c857e71583775, vars: {}, profile: , target: , version: 1.11.7
+[0m08:33:05  Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m08:33:05  Nothing changed, skipping partial parsing.
+[0m08:33:05  Partial parsing enabled, no changes found, skipping parsing
+[0m08:33:05  Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '1c230072-f176-4eed-8031-55d3e1dcc9dd', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001877FB007A0>]}
+[0m08:33:05  Wrote artifact WritableManifest to C:\Users\alvaro.carmona\OneDrive - Lognext\Escritorio\Yukon\dbt-Snowflake\dbt_mktv_project\target\manifest.json
+[0m08:33:05  Wrote artifact SemanticManifest to C:\Users\alvaro.carmona\OneDrive - Lognext\Escritorio\Yukon\dbt-Snowflake\dbt_mktv_project\target\semantic_manifest.json
+[0m08:33:05  Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '1c230072-f176-4eed-8031-55d3e1dcc9dd', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001871E8BD760>]}
+[0m08:33:05  Found 38 models, 3 operations, 25 data tests, 20 sources, 1974 macros
+[0m08:33:05  
+[0m08:33:05  Concurrency: 8 threads (target='dev')
+[0m08:33:05  
+[0m08:33:05  Acquiring new snowflake connection 'master'
+[0m08:33:05  Acquiring new snowflake connection 'list_DB_MARKETING'
+[0m08:33:05  Acquiring new snowflake connection 'list_DB_MARKETING'
+[0m08:33:05  Acquiring new snowflake connection 'list_DB_MARKETING'
+[0m08:33:05  Using snowflake connection "list_DB_MARKETING"
+[0m08:33:05  Using snowflake connection "list_DB_MARKETING"
+[0m08:33:05  Using snowflake connection "list_DB_MARKETING"
+[0m08:33:05  On list_DB_MARKETING: show terse schemas in database DB_MARKETING
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.11.7", "profile_name": "dbt_mktv_project", "target_name": "dev", "connection_name": "list_DB_MARKETING"} */
+[0m08:33:05  On list_DB_MARKETING: show terse schemas in database DB_MARKETING
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.11.7", "profile_name": "dbt_mktv_project", "target_name": "dev", "connection_name": "list_DB_MARKETING"} */
+[0m08:33:05  On list_DB_MARKETING: show terse schemas in database DB_MARKETING
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.11.7", "profile_name": "dbt_mktv_project", "target_name": "dev", "connection_name": "list_DB_MARKETING"} */
+[0m08:33:05  Opening a new connection, currently in state init
+[0m08:33:05  Opening a new connection, currently in state init
+[0m08:33:05  Opening a new connection, currently in state init
+[0m08:33:06  SQL status: SUCCESS 5 in 0.823 seconds
+[0m08:33:06  SQL status: SUCCESS 5 in 0.967 seconds
+[0m08:33:06  SQL status: SUCCESS 5 in 1.033 seconds
+[0m08:33:06  Re-using an available connection from the pool (formerly list_DB_MARKETING, now create_DB_MARKETING_)
+[0m08:33:06  Creating schema "database: "DB_MARKETING"
+"
+[0m08:33:06  Using snowflake connection "create_DB_MARKETING_"
+[0m08:33:06  On create_DB_MARKETING_: create schema if not exists DB_MARKETING.
+/* {"app": "dbt", "dbt_version": "1.11.7", "profile_name": "dbt_mktv_project", "target_name": "dev", "connection_name": "create_DB_MARKETING_"} */
+[0m08:33:06  Snowflake adapter: Snowflake query id: 01c5da61-020b-3848-0003-d652006fad72
+[0m08:33:06  Snowflake adapter: Snowflake error: 001003 (42000): SQL compilation error:
+syntax error line 2 at position 146 unexpected '<EOF>'.
+[0m08:33:06  Snowflake adapter: Error running SQL: macro create_schema
+[0m08:33:06  Snowflake adapter: Rolling back transaction.
+[0m08:33:06  Connection 'master' was properly closed.
+[0m08:33:06  Connection 'list_DB_MARKETING' was left open.
+[0m08:33:06  On list_DB_MARKETING: Close
+[0m08:33:07  Connection 'create_DB_MARKETING_' was left open.
+[0m08:33:07  On create_DB_MARKETING_: Close
+[0m08:33:07  Connection 'list_DB_MARKETING' was left open.
+[0m08:33:07  On list_DB_MARKETING: Close
+[0m08:33:07  
+[0m08:33:07  Finished running  in 0 hours 0 minutes and 2.27 seconds (2.27s).
+[0m08:33:07  Encountered an error:
+Database Error
+  001003 (42000): SQL compilation error:
+  syntax error line 2 at position 146 unexpected '<EOF>'.
+[0m08:33:07  Command `dbt build` failed at 10:33:07.907842 after 3.92 seconds
+[0m08:33:07  Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001877B63BFB0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001871C11F830>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001871F0CA930>]}
+[0m08:33:07  Flushing usage events
+[0m08:33:08  An error was encountered while trying to flush usage events

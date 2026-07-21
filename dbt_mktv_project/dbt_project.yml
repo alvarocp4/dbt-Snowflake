@@ -34,6 +34,10 @@ models:
       +unique_key: ['id_prospect']
       +pre-hook:  "{{ control_carga_tablas('start') }}"
       +post-hook: "{{ control_carga_tablas('end') }}"
+  elementary:
+    +database: DB_MARKETING
+    +schema: SH_STAGING
+    +tags: elementary
 
 on-run-end:
   - "{{ control_carga_tablas('cleanup') }}"

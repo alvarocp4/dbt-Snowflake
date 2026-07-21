@@ -3,17 +3,22 @@ version: 2
 sources:
   - name: minerva
     database: DB_MINERVA
-    schema: SH_STAGING 
-    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
-    tags: [origen, minerva]
-    freshness:
-      warn_after:
-        count: 24
-        period: hour 
+    schema: SH_STAGING
+    config:
+      loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+      tags:
+        - origen
+        - minerva
+      freshness:
+        warn_after:
+          count: 24
+          period: hour 
     tables:
       - name: yukon_opportunity_created_es
         description: "Tabla con las Oportunidades creadas"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador único de la Oportunidad"
@@ -22,7 +27,9 @@ sources:
               - not_null
       - name: yukon_visit_booked_es
         description: "Tabla con los Prospectos con Visitas reservadas"
-        tags: [yukon]
+        config:
+          tags: 
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -34,7 +41,9 @@ sources:
               - not_null
       - name: yukon_visit_assigned_es
         description: "Tabla con los Prospectos con Visitas asignadas"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -46,7 +55,9 @@ sources:
               - not_null
       - name: yukon_opportunity_updated_es
         description: "Tabla de las actualizaciones de las Oportunidades"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -54,7 +65,9 @@ sources:
               - not_null
       - name: yukon_opportunity_installed_es
         description: "Tabla con las Oportunidades Instaladas"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -66,7 +79,9 @@ sources:
               - not_null
       - name: yukon_opportunity_closed_es
         description: "Tabla con las Oportunidades cerradas"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -74,7 +89,9 @@ sources:
               - not_null
       - name: yukon_offer_sent_es
         description: "Tabla con los Prospectos con Ofertas enviadas"
-        tags: [yukon]
+        config:
+          tags:
+            - yukon
         columns:
           - name: opportunity_number
             description: "Identificador de la Oportunidad"
@@ -88,54 +105,92 @@ sources:
   - name: odin_staging
     database: DB_ODIN
     schema: SH_STAGING
-    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
-    tags: [origen, odin, odin_staging]
-    freshness:
-      warn_after:
-        count: 24
-        period: hour
+    config:
+      loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+      tags:
+        - origen
+        - odin
+        - odin_staging
+      freshness:
+        warn_after:
+          count: 24
+          period: hour
     tables:
       - name: src_mktv_maestros_acds
         description: "Tabla Maestra con las Campañas"
-        tags: [odin, leads]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktv_maestros_origenes
         description: "Tabla Maestra con los Orígenes"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_altitude8_reportingdatosperfil
         description: "Tabla Maestra con los Datos de perfil de Altitude8"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktv_campana_crea_contactcenter
         description: "Tabla Maestra con los Datos de Camapana de Creacion"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktv_campains
         description: "Tabla Maestra con los Datos de Camapana de Creacion"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktv_jotforms
         description: "Tabla Maestra con los Datos de Camapana de Creacion"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktv_totalagentes
         description: "Tabla Maestra con los Datos de Camapana de Creacion"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: src_mktcap_campana
         description: "Tabla Maestra con los Datos de Camapana de Creacion"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: aux_altitude7_consultas
         description: "Tabla Fact con los datos de las llamadas outbound"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
 
   - name: odin_main
     database: DB_ODIN
     schema: SH_MAIN
-    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
-    tags: [origen, odin, odin_main]
-    freshness:
-      warn_after:
-        count: 24
-        period: hour
+    config:
+      loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+      tags:
+        - origen
+        - odin
+        - odin_main
+      freshness:
+        warn_after:
+          count: 24
+          period: hour
     tables:
       - name: d_user_mnt
         description: "Tabla Maestra con las matriculas de los usuarios"
-        tags: [odin, leads]
+        config:
+          tags:
+            - odin
+            - leads
         columns:
           - name: usr_matricula_responsable
             description: "Matricula"
@@ -150,20 +205,30 @@ sources:
   - name: marketing
     database: DB_MARKETING
     schema: SH_MAIN
-    loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
-    tags: [origen, marketing, marketing]
-    freshness:
-      warn_after:
-        count: 24
-        period: hour
+    config:
+      loaded_at_field: "to_timestamp_ntz(left(proctime::string, 14), 'yyyymmddhh24miss')"
+      tags: [origen, marketing, marketing]
+      freshness:
+        warn_after:
+          count: 24
+          period: hour
     tables:
       - name: fact_altitude8_reportingtotalcts
         description: "Tabla Fact con la informacion cts"
-        tags: [odin, leads]
+        config:
+          tags:
+            - odin
+            - leads
       - name: fact_altitude7_outbound
         description: "Tabla Fact con los datos de las llamadas outbound"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       - name: fact_altitude7_inbound
         description: "Tabla Fact con los datos de las llamadas outbound"
-        tags: [odin, origen]
+        config:
+          tags:
+            - odin
+            - origen
       
