@@ -40,7 +40,7 @@ models:
       - name: id_prospect
         description: "Identificador único del Prospecto"
         
-  - name: stg_campana_crea
+  - name: stg_campaign_crea
     description: "View con los Prospectos con el cambio de Centro de Coste"
     config:
       tags: [sh_staging, yukon]

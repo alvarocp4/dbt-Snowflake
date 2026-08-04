@@ -32,8 +32,9 @@ models:
       +incremental_strategy: merge
       +on_schema_change: sync_all_columns
       +unique_key: ['id_prospect']
-      +pre-hook:  "{{ control_carga_tablas('start') }}"
-      +post-hook: "{{ control_carga_tablas('end') }}"
+      +pre-hook:  "{{ load_control_tables('start') }}"
+      +post-hook: "{{ load_control_tables('end') }}"
 
 on-run-end:
-  - "{{ control_carga_tablas('cleanup') }}"
+  - "{{ load_control_tables('cleanup') }}"
+  

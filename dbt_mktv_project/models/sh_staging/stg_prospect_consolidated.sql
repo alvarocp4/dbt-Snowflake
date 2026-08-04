@@ -1,10 +1,3 @@
--- =============================================================================
--- stg_prospect_consolidated
--- spine minimo.
--- Une los 5 modelos por id_prospecto. Base = stg_opportunity_current_state (1 fila/prospecto).
--- Sin derivados (is_express, geo, territorial, is_client...) -> se anaden en una pasada posterior.
--- =============================================================================
-
 with base as (
     select * from {{ ref('stg_opportunity_current_state') }}
 ),
@@ -23,23 +16,24 @@ attrs_cc as (
 medio_canal as (
     select
         id_prospect,
-        medio_lead,
-        canal_lead,
-        medio_esp,
-        clasificacion_submedio,
-        ds_company            as ds_company_lead,
-        ds_tipologia_campana  as ds_tipologia_campana_lead,
-        origen                as origen_lead,
-        campana               as campana_lead,
-        criterio              as criterio_medio_canal
+        source_cdm,
+        channel_cdm,
+        source_esp,
+        source_subcategory,
+        company_name,
+        ds_camapaign_type,
+        ds_origin,
+        campaign_name,
+        criterio                    as criterio_medio_canal,
+        ds_business_model,
     from {{ ref('stg_lead_medio_canal') }}
 ),
 
 campana_crea as (
     select
         id_prospect,
-        creation_campaing
-    from {{ ref('stg_campana_crea') }}
+        campaign_creation
+    from {{ ref('stg_campaign_crea') }}
 ),
 
 foto as (
@@ -61,22 +55,23 @@ select
     ac.previous_cost_center,
     ac.is_tlvanu_flg,
     ac.is_due_to_opp_flg,
-    mc.medio_lead,
-    mc.canal_lead,
-    mc.medio_esp,
-    mc.clasificacion_submedio,
-    mc.ds_company_lead,
-    mc.ds_tipologia_campana_lead,
-    mc.origen_lead,
-    mc.campana_lead,
+    mc.source_cdm,
+    mc.channel_cdm,
+    mc.source_esp,
+    mc.source_subcategory,
+    mc.company_name,
+    mc.ds_camapaign_type,
+    mc.ds_origin,
+    mc.campaign_name,
     mc.criterio_medio_canal,
-    cr.creation_campaing,
-    f.entra_foto,
-    f.fecha_foto,
-    f.entra_foto_online,
-    f.fecha_foto_online,
-    f.est_hist_prospecto_cierre,
-    f.abrvrecurso_his
+    mc.ds_business_model,
+    cr.campaign_creation,
+    f.entra_foto                        as is_foto_criteria,
+    f.fecha_foto                        as dh_foto_criteria,
+    f.entra_foto_online                 as is_foto_criteria_online,
+    f.fecha_foto_online                 as dh_foto_criteria_online,
+    f.est_hist_prospecto_cierre         as prospect_status_closing_hist,
+    f.abrvrecurso_his                   as abreviation_his
 from base b
 left join attrs_cc     ac on ac.id_prospect = b.id_prospect
 left join medio_canal  mc on mc.id_prospect = b.id_prospect

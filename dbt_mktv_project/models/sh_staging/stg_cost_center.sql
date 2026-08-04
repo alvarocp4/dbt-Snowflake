@@ -5,12 +5,12 @@ with base_created as (
         created.creation_datetime                                       as dh_creation,
         created.event_datetime                                          as dh_event,
         parse_json(created."OWNERSHIP"):"ownerUserId"::varchar          as assigned_user,
-        parse_json("OWNERSHIP"):"costCenter"::varchar                   as cost_center,
+        parse_json(created."OWNERSHIP"):"costCenter"::varchar           as cost_center,
         created.ownership_subchannel
     from {{ source('minerva','yukon_opportunity_created_es') }} created
     where id_prospect is not null
 ),
-
+ 
 created as (
     select
         base_created.opportunity_number,
@@ -21,7 +21,6 @@ created as (
         base_created.cost_center,
         base_created.ownership_subchannel
     from base_created
-    where id_prospect is not null
     qualify row_number() over (
         partition by id_prospect
         order by dh_event desc
@@ -86,7 +85,7 @@ tlvanu as (
 ),
 
 due_to_opp as (
-    select distinct
+    select
         closed.opportunity_number                               as opportunity_number,
         base_created.id_prospect                                as id_prospect
     from (

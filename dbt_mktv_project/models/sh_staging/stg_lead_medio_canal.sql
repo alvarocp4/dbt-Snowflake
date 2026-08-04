@@ -1,245 +1,228 @@
-with vs_acds as (
+with src_master_acds as (
     select
-        cast(idacd as integer)                  as id_acd,
-        ltrim(rtrim(upper(desacd)))             as desacd,
-        nombre                                  as acd_name,
-        medio                                   as acd_source,
-        medio_cdm                               as acd_source_cdm,
-        canal                                   as acd_channel,
-        collate(trim(canal_cdm), '')            as acd_channel_cdm, 
-        upper(tlf)                              as tlf,
-        medio                                   as acd_source_esp,
-        clasificacion_submedio,
-        fecha_inicio,
-        fecha_fin,
-        empresa,
-        ds_tipologia_campana
-    from {{ source('odin_staging', 'src_mktv_maestros_acds') }}
-    where idacd is not null
-      and try_to_number(idacd) is not null          -- equivalente a PATINDEX numerico
+        cast(src_master_acds.idacd as integer)                  as id_acd,
+        ltrim(rtrim(upper(src_master_acds.desacd)))             as acd_code,
+        src_master_acds.nombre                                  as ds_acd,
+        src_master_acds.medio                                   as source,
+        src_master_acds.medio                                   as source_esp,
+        src_master_acds.medio_cdm                               as source_cdm,
+        src_master_acds.clasificacion_submedio                  as source_subcategory,
+        src_master_acds.canal                                   as channel,
+        collate(trim(src_master_acds.canal_cdm), '')            as channel_cdm,
+        upper(src_master_acds.tlf)                              as phone_number,
+        src_master_acds.empresa                                 as company_name,
+        null                                                    as ds_business_model,
+        src_master_acds.ds_tipologia_campana                    as ds_camapaign_type,
+        src_master_acds.fecha_inicio                            as dt_start,
+        src_master_acds.fecha_fin                               as dt_end
+    from {{ source('odin_staging', 'src_mktv_maestros_acds') }} src_master_acds
+    where id_acd is not null
+      and id_acd is not null
 ),
 
-vs_origenes as (
+src_master_origin as (
     select distinct
-        rtrim(ltrim(upper(origen)))             as origenupper, 
-        collate(trim(canal_cdm), '')            as acd_channel_cdm, 
-        medio_cdm                               as acd_source_cdm,
-        medio                                   as acd_source,
-        clasificacion_submedio,
-        fecha_inicio,
-        fecha_fin,
-        compania,
-        ds_tipologia_campana
-    from {{ source('odin_staging', 'src_mktv_maestros_origenes') }}
-    where origen is not null
-      and canal  is not null
+        rtrim(ltrim(upper(src_master_origin.origen)))           as ds_origin,
+        src_master_origin.medio                                 as source,
+        src_master_origin.medio_cdm                             as source_cdm,
+        src_master_origin.clasificacion_submedio                as source_subcategory,
+        src_master_origin.canal                                 as channel,
+        collate(trim(src_master_origin.canal_cdm), '')          as channel_cdm,
+        src_master_origin.compania                              as company_name,
+        null                                                    as ds_business_model,
+        src_master_origin.ds_tipologia_campana                  as ds_camapaign_type,
+        src_master_origin.fecha_inicio                          as dt_start,
+        src_master_origin.fecha_fin                             as dt_end
+    from {{ source('odin_staging', 'src_mktv_maestros_origenes') }} src_master_origin
+    where ds_origin is not null
+      and channel  is not null
 ),
 
--- 1) FACT_ALTITUDE7_INBOUND ----------------------------------------------------
 inbound as (
     select
-        'I'                                 as io,
-        a.bi_campana                        as campana,
-        a.id_easycode                       as easycode,
-        a.fentradacampana,
-        a.idprospecto,
-        a.idnumacd,
+        'I'                                                                                                         as io,
+        altitude7_inbound.idprospecto                                                                               as id_prospect,
+        altitude7_inbound.idnumacd                                                                                  as id_num_acd,
+        altitude7_inbound.id_easycode                                                                               as id_easy_code,
+        altitude7_inbound.bi_campana                                                                                as campaign_name,
+        altitude7_inbound.fentradacampana                                                                           as dh_campaign_entry,
+        iff(altitude7_inbound.origeninternet = '', altitude7_inbound.desorigen, altitude7_inbound.origeninternet)   as ds_origin,
+        upper(iff(src_master_acds.source_esp = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.source, src_master_acds.source_esp))                               as source_esp,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.source_cdm, src_master_acds.source_cdm))                           as source_cdm,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.source_subcategory, src_master_acds.source_subcategory))           as source_subcategory,
+        upper(iff(src_master_acds.channel = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.channel_cdm, src_master_acds.channel_cdm))                         as channel_cdm,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.company_name, src_master_acds.company_name))                       as company_name,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.company_name, src_master_acds.company_name))                       as ds_business_model,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.ds_camapaign_type, src_master_acds.ds_camapaign_type))             as ds_camapaign_type,
+        altitude7_inbound.tfncontacto1                                                                              as first_phone_contact,
+        altitude7_inbound.tfncontacto2                                                                              as second_phone_contact,
+        altitude7_inbound.tfnpantalla                                                                               as screen_phone_number,
         case 
-            when a.origeninternet = '' then a.desorigen 
-            else a.origeninternet 
-        end as origen,
-        upper(case 
-            when b.acd_source = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.acd_source_cdm 
-            else b.acd_source_cdm              
-        end) as medio_cdm,
-        upper(case
-            when b.acd_channel = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.acd_channel_cdm 
-            else b.acd_channel_cdm
-        end) as canal_cdm,
-        upper(case 
-            when b.acd_source_esp = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.acd_source 
-            else b.acd_source_esp
-        end) as medio_esp,
-        upper(case 
-            when b.acd_source = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.clasificacion_submedio 
-            else b.clasificacion_submedio 
-        end) as clasificacion_submedio,
-        upper(case 
-            when b.acd_source = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.compania
-            else b.empresa
-        end) as ds_company,
-        upper(case 
-            when b.acd_source = 'SEGUN ORIGEN' or a.idnumacd is null or a.idnumacd = 0 then c.ds_tipologia_campana 
-            else b.ds_tipologia_campana   
-        end) as ds_tipologia_campana,
-        a.tfncontacto1, 
-        a.tfncontacto2, 
-        a.tfnpantalla,
-        case 
-            when coalesce(a.fentradacampana::varchar,'19500101') = '19500101' then a.momento 
-            else a.fentradacampana 
-        end as f_crit3,
-        cast(null as varchar) as ultimo_result
-    from {{ source('marketing', 'fact_altitude7_inbound') }} a
-    inner join {{ source('odin_staging', 'aux_altitude7_consultas') }} aux
-        on a.bi_campana = aux.campana and aux.mktv = 1
-    left join vs_acds b         on a.idnumacd = b.id_acd
-       and date(a.fentradacampana) >= date(b.fecha_inicio)
-       and date(a.fentradacampana) <= date(b.fecha_fin)
-    left join vs_origenes c     on (case when a.origeninternet = '' then a.desorigen else a.origeninternet end) = c.origenupper
-       and date(a.fentradacampana) >= date(c.fecha_inicio)
-       and date(a.fentradacampana) <= date(c.fecha_fin)
+            when coalesce(dh_campaign_entry::varchar,'19500101') = '19500101' then altitude7_inbound.momento 
+            else dh_campaign_entry 
+        end                                                                                                         as third_criteria,
+        cast(null as varchar)                                                                                       as last_result
+    from {{ source('marketing', 'fact_altitude7_inbound') }} altitude7_inbound
+    left join src_master_acds       on id_num_acd = src_master_acds.id_acd
+       and date(dh_campaign_entry) >= date(src_master_acds.dt_start)
+       and date(dh_campaign_entry) <= date(src_master_acds.dt_end)
+    left join src_master_origin     on (iff(altitude7_inbound.origeninternet = '', altitude7_inbound.desorigen, altitude7_inbound.origeninternet)) = src_master_origin.ds_origin
+       and date(dh_campaign_entry) >= date(src_master_origin.dt_start)
+       and date(dh_campaign_entry) <= date(src_master_origin.dt_end)
+    inner join {{ source('odin_staging', 'aux_altitude7_consultas') }} aux_altitude7
+        on altitude7_inbound.bi_campana = aux_altitude7.campana and aux_altitude7.mktv = 1
 ),
 
--- 2) FACT_ALTITUDE7_OUTBOUND ---------------------------------------------------
 outbound as (
     select
-        'O'                                 as io,
-        a.bi_campana                        as campana,
-        a.id_easycode                       as easycode,
-        a.ct_visita                         as fentradacampana,
-        cast(null as number)                as idprospecto,
-        b.id_acd                            as idnumacd,
-        a.ct_origen                         as origen,
-        upper(case 
-            when b.acd_source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_source_cdm
-            else b.acd_source_cdm
-        end) as medio_cdm,
-        upper(case 
-            when b.acd_channel    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_channel_cdm
-            else b.acd_channel_cdm
-        end) as canal_cdm,
-        upper(case 
-            when b.acd_source_esp = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_source
-            else b.acd_source_esp
-        end) as medio_esp,
-        upper(case 
-            when b.acd_source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.clasificacion_submedio 
-            else b.clasificacion_submedio 
-        end) as clasificacion_submedio,
-        upper(case 
-            when b.acd_source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.compania
-            else b.empresa
-        end) as ds_company,
-        upper(case 
-            when b.acd_source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.ds_tipologia_campana
-            else b.ds_tipologia_campana
-        end) as ds_tipologia_campana,
-        a.ct_tfno_contacto1 as tfncontacto1, 
-        a.ct_tfno_contacto2 as tfncontacto2, 
-        cast(null as varchar) as tfnpantalla,
+        'O'                                                                                                         as io,
+        cast(null as number)                                                                                        as id_prospect,
+        src_master_acds.id_acd                                                                                      as id_num_acd,
+        altitude7_outbound.id_easycode                                                                              as id_easy_code,
+        altitude7_outbound.bi_campana                                                                               as campaign_name,
+        altitude7_outbound.ct_visita                                                                                as dh_campaign_entry,
+        altitude7_outbound.ct_origen                                                                                as ds_origin,
+        upper(iff(src_master_acds.source_esp = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.source, src_master_acds.source_esp))                               as source_esp,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.source_cdm, src_master_acds.source_cdm))                           as source_cdm,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null
+            or id_num_acd = 0, src_master_origin.source_subcategory, src_master_acds.source_subcategory))           as source_subcategory,
+        upper(iff(src_master_acds.channel = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.channel_cdm, src_master_acds.channel_cdm))                         as channel_cdm,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null
+            or id_num_acd = 0, src_master_origin.company_name, src_master_acds.company_name))                       as company_name,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.company_name, src_master_acds.company_name))                       as ds_business_model,
+        upper(iff(src_master_acds.source = 'SEGUN ORIGEN' or id_num_acd is null
+            or id_num_acd = 0, src_master_origin.ds_camapaign_type, src_master_acds.ds_camapaign_type))             as ds_camapaign_type,
+        altitude7_outbound.ct_tfno_contacto1                                                                        as first_phone_contact, 
+        altitude7_outbound.ct_tfno_contacto2                                                                        as second_phone_contact, 
+        cast(null as varchar)                                                                                       as screen_phone_number,
         case 
-            when coalesce(a.horaprimerallamada::varchar,'19500101') = '19500101' then a.moment 
-            else a.horaprimerallamada 
-        end as f_crit3,
-        cast(null as varchar) as ultimo_result
-    from {{ source('marketing', 'fact_altitude7_outbound') }} a
-    inner join {{ source('odin_staging', 'aux_altitude7_consultas') }} aux
-        on a.bi_campana = aux.campana and aux.mktv = 1
-    left join vs_acds b         on ltrim(rtrim(upper(a.ct_grupoacd))) = b.acd_name
-       and date(a.ct_visita) >= date(b.fecha_inicio)
-       and date(a.ct_visita) <= date(b.fecha_fin)
-    left join vs_origenes c     on a.ct_origen = c.origenupper
-       and date(a.ct_visita) >= date(c.fecha_inicio)
-       and date(a.ct_visita) <= date(c.fecha_fin)
+            when coalesce(altitude7_outbound.horaprimerallamada::varchar,'19500101') = '19500101' then altitude7_outbound.moment 
+            else altitude7_outbound.horaprimerallamada 
+        end                                                                                                         as third_criteria,
+        cast(null as varchar)                                                                                       as last_result
+    from {{ source('marketing', 'fact_altitude7_outbound') }} altitude7_outbound
+    left join src_master_acds       on ltrim(rtrim(upper(altitude7_outbound.ct_grupoacd))) = src_master_acds.ds_acd
+       and date(altitude7_outbound.ct_visita) >= date(src_master_acds.dt_start)
+       and date(altitude7_outbound.ct_visita) <= date(src_master_acds.dt_end)
+    left join src_master_origin     on altitude7_outbound.ct_origen = src_master_origin.ds_origin
+       and date(altitude7_outbound.ct_visita) >= date(src_master_origin.dt_start)
+       and date(altitude7_outbound.ct_visita) <= date(src_master_origin.dt_end)
+    inner join {{ source('odin_staging', 'aux_altitude7_consultas') }} aux_altitude7
+        on altitude7_outbound.bi_campana = aux_altitude7.campana and aux_altitude7.mktv = 1
 ),
 
--- 3) FACT_ALTITUDE8_ReportingTotalCTs ------------------------------------------
 a8 as (
     select
-        '8'                                 as io,
-        a.scampanacreacionprospecto         as campana,
-        a.perfildirectorio                  as easycode,
-        a.fentradacampana,
-        a.idprospecto,
-        a.idnumacd,
-        case 
-            when a.origeninternet = '' then a.desorigen 
-            else a.origeninternet 
-        end as origen,
-        upper(case 
-            when b2.acd_source_cdm is not null then b2.acd_source_cdm              
-            when b.acd_source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_source_cdm              
-            else b.acd_source_cdm              
-        end) as medio_cdm,
-        upper(case 
-            when b2.acd_channel_cdm is not null then b2.acd_channel_cdm              
-            when b.acd_channel = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_channel_cdm              
-            else b.acd_channel_cdm              
-        end) as canal_cdm,
-        upper(case 
-            when b2.acd_source_esp is not null then b2.acd_source_esp              
-            when b.acd_source_esp = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.acd_source              
-            else b.acd_source_esp              
-        end) as medio_esp,
-        upper(case 
-            when b2.clasificacion_submedio is not null then b2.clasificacion_submedio 
-            when b.acd_source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.clasificacion_submedio 
-            else b.clasificacion_submedio 
-        end) as clasificacion_submedio,
-        upper(case 
-            when b2.empresa is not null then b2.empresa                
-            when b.acd_source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.compania              
-            else b.empresa
-        end) as ds_company,
-        upper(case 
-            when b2.ds_tipologia_campana   is not null then b2.ds_tipologia_campana   
-            when b.acd_source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then c.ds_tipologia_campana  
-            else b.ds_tipologia_campana   
-        end) as ds_tipologia_campana,
-        a.tfncontacto1, 
-        a.tfncontacto2, 
-        a.tfnpantalla,
-        a.fentradacampana as f_crit3,
-        a.ultimoresult    as ultimo_result
-    from {{ source('marketing', 'fact_altitude8_reportingtotalcts') }} a
-    inner join {{ source('odin_staging', 'src_mktv_campains') }} smc
-        on a.campania = smc.altitude
-       and smc.linea_de_negocio = 'Contact Center'
-       and smc.altitude not in ('SP_AsignMkt')
-       and date(a.fentradacampana) >= date(smc.fecha_inicio)
-       and date(a.fentradacampana) <= date(smc.fecha_fin)
-    left join vs_acds b
-        on a.idnumacd = b.id_acd
-       and date(a.fentradacampana) >= date(b.fecha_inicio)
-       and date(a.fentradacampana) <= date(b.fecha_fin)
-    left join vs_acds b2
-        on b2.tlf is not null and b2.tlf <> 'X' and substr(b2.desacd,1,1) <> '6'
-       and a.tr_num_900 = b2.tlf
-       and a.campania = 'SP_RcvAbandoned'
-       and date(a.fentradacampana) >= date(b2.fecha_inicio)
-       and date(a.fentradacampana) <= date(b2.fecha_fin)
-    left join vs_origenes c
-        on rtrim(ltrim(upper(a.desorigen))) = c.origenupper
-       and date(a.fentradacampana) >= date(c.fecha_inicio)
-       and date(a.fentradacampana) <= date(c.fecha_fin)
+        '8'                                                                                                            as io,
+        altitude8_totalcts.idprospecto                                                                                 as id_prospect,
+        altitude8_totalcts.idnumacd                                                                                    as id_num_acd,
+        altitude8_totalcts.perfildirectorio                                                                            as id_easy_code,
+        altitude8_totalcts.scampanacreacionprospecto                                                                   as campaign_name,
+        altitude8_totalcts.fentradacampana                                                                             as dh_campaign_entry,
+        iff(altitude8_totalcts.origeninternet = '', altitude8_totalcts.desorigen, altitude8_totalcts.origeninternet)   as ds_origin,
+        upper(
+            case 
+                when b2.source_esp is not null then b2.source_esp              
+                when b.source_esp = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.source              
+                else b.source_esp              
+            end)                                                                                                       as source_esp,
+        upper(
+            case 
+                when b2.source_cdm is not null then b2.source_cdm              
+                when b.source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.source_cdm              
+                else b.source_cdm              
+            end)                                                                                                       as source_cdm,
+        upper(
+            case 
+                when b2.source_subcategory is not null then b2.source_subcategory 
+                when b.source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.source_subcategory 
+                else b.source_subcategory 
+            end)                                                                                                       as source_subcategory,
+        upper(
+            case 
+                when b2.channel_cdm is not null then b2.channel_cdm              
+                when b.channel = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.channel_cdm              
+                else b.channel_cdm              
+            end)                                                                                                       as channel_cdm,
+        upper(
+            case 
+                when b2.company_name is not null then b2.company_name                
+                when b.source = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.company_name              
+                else b.company_name
+            end)                                                                                                       as company_name,
+        upper(iff(b.source = 'SEGUN ORIGEN' or id_num_acd is null 
+            or id_num_acd = 0, src_master_origin.company_name, b.company_name))                                        as ds_business_model,
+        upper(
+            case 
+                when b2.ds_camapaign_type   is not null then b2.ds_camapaign_type   
+                when b.source    = 'SEGUN ORIGEN' or b.id_acd is null or b.id_acd = 0 then src_master_origin.ds_camapaign_type  
+                else b.ds_camapaign_type   
+            end)                                                                                                       as ds_camapaign_type,
+        altitude8_totalcts.tfncontacto1                                                                                as first_phone_contact, 
+        altitude8_totalcts.tfncontacto2                                                                                as second_phone_contact, 
+        altitude8_totalcts.tfnpantalla                                                                                 as screen_phone_number,
+        altitude8_totalcts.fentradacampana                                                                             as third_criteria,
+        altitude8_totalcts.ultimoresult                                                                                as last_result
+    from {{ source('marketing', 'fact_altitude8_reportingtotalcts') }} altitude8_totalcts
+    left join src_master_acds b
+        on altitude8_totalcts.idnumacd = b.id_acd
+       and date(altitude8_totalcts.fentradacampana) >= date(b.dt_start)
+       and date(altitude8_totalcts.fentradacampana) <= date(b.dt_end)
+    left join src_master_acds b2
+        on b2.phone_number is not null and b2.phone_number <> 'X' and substr(b2.acd_code,1,1) <> '6'
+       and altitude8_totalcts.tr_num_900 = b2.phone_number
+       and altitude8_totalcts.campania = 'SP_RcvAbandoned'
+       and date(altitude8_totalcts.fentradacampana) >= date(b2.dt_start)
+       and date(altitude8_totalcts.fentradacampana) <= date(b2.dt_end)
+    left join src_master_origin
+        on rtrim(ltrim(upper(altitude8_totalcts.desorigen))) = src_master_origin.ds_origin
+       and date(altitude8_totalcts.fentradacampana) >= date(src_master_origin.dt_start)
+       and date(altitude8_totalcts.fentradacampana) <= date(src_master_origin.dt_end)
+    inner join {{ source('odin_staging', 'src_mktv_campains') }} src_mktv_campains
+        on altitude8_totalcts.campania = src_mktv_campains.altitude
+       and src_mktv_campains.linea_de_negocio = 'Contact Center'
+       and src_mktv_campains.altitude not in ('SP_AsignMkt')
+       and date(altitude8_totalcts.fentradacampana) >= date(src_mktv_campains.fecha_inicio)
+       and date(altitude8_totalcts.fentradacampana) <= date(src_mktv_campains.fecha_fin)
 ),
 
--- 4) SRC_MKTV_JOTFORMS ---------------------------------------------------------
 jotforms as (
     select
-        'J'                                 as io,
-        a.descrct                           as campana,
-        a.perfildirectorio / 10000000000000 as easycode,
-        a.fentradacampana,
-        cast(null as number)                as idprospecto,
-        cast(null as number)                as idnumacd,
-        rtrim(ltrim(upper(a.origeninternet))) as origen,
-        upper(c.acd_source_cdm)              as medio_cdm,
-        upper(c.acd_channel_cdm)              as canal_cdm,
-        upper(c.acd_source)              as medio_esp,
-        upper(c.clasificacion_submedio) as clasificacion_submedio,
-        upper(c.compania)              as ds_company,
-        upper(c.ds_tipologia_campana)  as ds_tipologia_campana,
-        cast(null as varchar) as tfncontacto1, cast(null as varchar) as tfncontacto2, 
-        a.tfnpantalla_e as tfnpantalla,
-        a.fentradacampana as f_crit3,
-        cast(null as varchar) as ultimo_result
-    from {{ source('odin_staging', 'src_mktv_jotforms') }} a
-    left join vs_origenes c
-        on rtrim(ltrim(upper(a.origeninternet))) = c.origenupper
-       and date(a.fentradacampana) >= date(c.fecha_inicio)
-       and date(a.fentradacampana) <= date(c.fecha_fin)
+        'J'                                                             as io,
+        cast(null as number)                                            as id_prospect,
+        cast(null as number)                                            as id_num_acd,
+        src_mktv_jotforms.perfildirectorio / 10000000000000             as id_easy_code,
+        src_mktv_jotforms.descrct                                       as campaign_name,
+        src_mktv_jotforms.fentradacampana                               as dh_campaign_entry,
+        rtrim(ltrim(upper(src_mktv_jotforms.origeninternet)))           as ds_origin,
+        upper(src_master_origin.source)                                 as source_esp,
+        upper(src_master_origin.source_cdm)                             as source_cdm,
+        upper(src_master_origin.source_subcategory)                     as source_subcategory,
+        upper(src_master_origin.channel_cdm)                            as channel_cdm,
+        upper(src_master_origin.company_name)                           as company_name,
+        null                                                            as ds_business_model,
+        upper(src_master_origin.ds_camapaign_type)                      as ds_camapaign_type,
+        cast(null as varchar)                                           as first_phone_contact, 
+        cast(null as varchar)                                           as second_phone_contact, 
+        src_mktv_jotforms.tfnpantalla_e                                 as screen_phone_number,
+        src_mktv_jotforms.fentradacampana                               as third_criteria,
+        cast(null as varchar)                                           as last_result
+    from {{ source('odin_staging', 'src_mktv_jotforms') }} src_mktv_jotforms
+    left join src_master_origin 
+        on rtrim(ltrim(upper(src_mktv_jotforms.origeninternet))) = src_master_origin.ds_origin
+       and date(src_mktv_jotforms.fentradacampana) >= date(src_master_origin.dt_start)
+       and date(src_mktv_jotforms.fentradacampana) <= date(src_master_origin.dt_end)
 ),
 
 leads_altitude as (
@@ -252,51 +235,48 @@ leads_altitude as (
     select * from jotforms
 ),
 
--- ##LEADS_MC: leads validos ----------------------------------------------------
 leads_mc as (
     select distinct
-        io, 
-        campana, 
-        easycode, 
-        fentradacampana, 
-        idprospecto, 
-        idnumacd, 
-        origen,
-        canal_cdm, 
-        medio_cdm, 
-        medio_esp, 
-        clasificacion_submedio, 
-        ds_company, 
-        ds_tipologia_campana
+        io,
+        id_prospect,
+        id_num_acd,
+        id_easy_code,
+        campaign_name,
+        dh_campaign_entry,
+        ds_origin,
+        source_esp,
+        source_cdm,
+        source_subcategory,
+        channel_cdm,
+        company_name,
+        ds_business_model,
+        ds_camapaign_type
     from leads_altitude
-    where (idnumacd is not null or (origen is not null and origen <> '' and origen <> ' '))
-      and canal_cdm not like '%RELL%'
-      and coalesce(idnumacd, 0) not in (26,117,504,532,600)
-      and coalesce(try_to_number(easycode::varchar), 0) <> 0
-      and rtrim(ltrim(coalesce(medio_cdm, ''))) <> ''
-      and rtrim(ltrim(coalesce(canal_cdm, ''))) <> ''
+    where (id_num_acd is not null or (ds_origin is not null and ds_origin <> '' and ds_origin <> ' '))
+      and channel_cdm not like '%RELL%'
+      and coalesce(id_num_acd, 0) not in (26,117,504,532,600)
+      and coalesce(try_to_number(id_easy_code::varchar), 0) <> 0
+      and rtrim(ltrim(coalesce(source_cdm, ''))) <> ''
+      and rtrim(ltrim(coalesce(channel_cdm, ''))) <> ''
 ),
 
--- ##Visitas: lado prospecto (de stg_opportunity + stg_opportunity_attrs) --------
--- ACD del prospecto (acd_description) -> NOMBRE del maestro (sin IDs)
 visitas as (
     select distinct
-        o.opportunity_number,
-        o.id_prospect,
-        o.id_easy_code,
-        o.dh_prospect_creation,
-        acd.desacd     as abrvnumacd,
-        acd.acd_channel_cdm  as canal_visita
-    from {{ ref('stg_opportunity_current_state') }} o
-    left join vs_acds acd
-        on upper(trim(o.acd_description)) = upper(trim(acd.acd_name))
-       and date(o.dh_prospect_creation) >= date(acd.fecha_inicio)
-       and date(o.dh_prospect_creation) <= date(acd.fecha_fin)
-    where year(o.dh_prospect_creation) >= 2017
-      and canal_visita not like '%RELL%'
+        stg_opportunity.opportunity_number,
+        stg_opportunity.id_prospect,
+        stg_opportunity.id_easy_code,
+        stg_opportunity.dh_prospect_creation,
+        src_master_acds.acd_code,
+        src_master_acds.channel_cdm
+    from {{ ref('stg_opportunity_current_state') }} stg_opportunity
+    left join src_master_acds
+        on upper(trim(stg_opportunity.ds_acd)) = upper(trim(src_master_acds.ds_acd))
+       and date(stg_opportunity.dh_prospect_creation) >= date(src_master_acds.dt_start)
+       and date(stg_opportunity.dh_prospect_creation) <= date(src_master_acds.dt_end)
+    where year(stg_opportunity.dh_prospect_creation) >= 2017
+      and channel_cdm not like '%RELL%'
 ),
 
--- CRITERIO 1: easycode + ventana de fecha (fentradacampana + 100 dias) ----------
 crit1 as (
     select
         d.opportunity_number,
@@ -304,36 +284,36 @@ crit1 as (
         1                                   as criterio_prio,
         'CRITERIO 1'                        as criterio,
         a.io, 
-        a.campana, 
-        a.easycode, 
-        a.fentradacampana, 
-        a.idnumacd, 
-        a.origen,
-        a.canal_cdm, 
-        a.medio_cdm, 
-        a.medio_esp, 
-        a.clasificacion_submedio, 
-        a.ds_company, 
-        a.ds_tipologia_campana,
+        a.campaign_name, 
+        a.id_easy_code, 
+        a.dh_campaign_entry, 
+        a.id_num_acd, 
+        a.ds_origin,
+        a.channel_cdm, 
+        a.source_cdm, 
+        a.source_esp, 
+        a.source_subcategory, 
+        a.company_name,
+        a.ds_business_model,
+        a.ds_camapaign_type,
         d.dh_prospect_creation
     from visitas d
     inner join leads_mc a
-        on coalesce(try_to_number(a.easycode::varchar),0) = coalesce(try_to_number(d.id_easy_code::varchar),0)
-       and dateadd('day', 100, a.fentradacampana) >= d.dh_prospect_creation
-    where coalesce(d.abrvnumacd, '0') not in ('-900','66188','66419','60051','66988')
-      and a.easycode is not null
-      and a.campana <> 'SP_RunScript'
-      and coalesce(try_to_number(a.easycode::varchar),0) <> 0
-      and coalesce(a.idnumacd, -1) not in (26,117,504,532,600)
-      and a.canal_cdm not like '%RELL%'
-      and rtrim(ltrim(coalesce(a.canal_cdm,''))) <> ''
-      and rtrim(ltrim(coalesce(a.medio_cdm,''))) <> ''
-      and rtrim(ltrim(coalesce(a.medio_esp,''))) <> ''
-      and rtrim(ltrim(coalesce(a.ds_company,''))) <> ''
-      and rtrim(ltrim(coalesce(a.ds_tipologia_campana,''))) <> ''
+        on coalesce(try_to_number(a.id_easy_code::varchar),0) = coalesce(try_to_number(d.id_easy_code::varchar),0)
+       and dateadd('day', 100, a.dh_campaign_entry) >= d.dh_prospect_creation
+    where coalesce(d.acd_code, '0') not in ('-900','66188','66419','60051','66988')
+      and a.id_easy_code is not null
+      and a.campaign_name <> 'SP_RunScript'
+      and coalesce(try_to_number(a.id_easy_code::varchar),0) <> 0
+      and coalesce(a.id_num_acd, -1) not in (26,117,504,532,600)
+      and a.channel_cdm not like '%RELL%'
+      and rtrim(ltrim(coalesce(a.channel_cdm,''))) <> ''
+      and rtrim(ltrim(coalesce(a.source_cdm,''))) <> ''
+      and rtrim(ltrim(coalesce(a.source_esp,''))) <> ''
+      and rtrim(ltrim(coalesce(a.company_name,''))) <> ''
+      and rtrim(ltrim(coalesce(a.ds_camapaign_type,''))) <> ''
 ),
 
--- CRITERIO 2: por id_prospecto -------------------------------------------------
 crit2 as (
     select
         d.opportunity_number,
@@ -341,30 +321,31 @@ crit2 as (
         2                                   as criterio_prio,
         'CRITERIO 2'                        as criterio,
         a.io, 
-        a.campana, 
-        a.easycode, 
-        a.fentradacampana, 
-        a.idnumacd, 
-        a.origen,
-        a.canal_cdm, 
-        a.medio_cdm, 
-        a.medio_esp, 
-        a.clasificacion_submedio, 
-        a.ds_company, 
-        a.ds_tipologia_campana,
+        a.campaign_name, 
+        a.id_easy_code, 
+        a.dh_campaign_entry, 
+        a.id_num_acd, 
+        a.ds_origin,
+        a.channel_cdm, 
+        a.source_cdm, 
+        a.source_esp, 
+        a.source_subcategory, 
+        a.company_name,
+        a.ds_business_model, 
+        a.ds_camapaign_type,
         d.dh_prospect_creation
     from visitas d
     inner join leads_mc a
-        on a.idprospecto = d.id_prospect
-    where a.easycode is not null
-      and a.campana <> 'SP_RunScript'
-      and not (coalesce(a.idnumacd, -1) in (21,26,132,10)
-               and (a.origen is null or a.origen = '' or a.origen = ' '))
-      and rtrim(ltrim(coalesce(a.canal_cdm,''))) <> ''
-      and rtrim(ltrim(coalesce(a.medio_cdm,''))) <> ''
-      and rtrim(ltrim(coalesce(a.medio_esp,''))) <> ''
-      and rtrim(ltrim(coalesce(a.ds_company,''))) <> ''
-      and rtrim(ltrim(coalesce(a.ds_tipologia_campana,''))) <> ''
+        on a.id_prospect = d.id_prospect
+    where a.id_easy_code is not null
+      and a.campaign_name <> 'SP_RunScript'
+      and not (coalesce(a.id_num_acd, -1) in (21,26,132,10)
+               and (a.ds_origin is null or a.ds_origin = '' or a.ds_origin = ' '))
+      and rtrim(ltrim(coalesce(a.channel_cdm,''))) <> ''
+      and rtrim(ltrim(coalesce(a.source_cdm,''))) <> ''
+      and rtrim(ltrim(coalesce(a.source_esp,''))) <> ''
+      and rtrim(ltrim(coalesce(a.company_name,''))) <> ''
+      and rtrim(ltrim(coalesce(a.ds_camapaign_type,''))) <> ''
 ),
 
 /* -------------------------------------------------------------------------
@@ -391,24 +372,25 @@ picked as (
     from candidatos
     qualify row_number() over (
         partition by id_prospect
-        order by criterio_prio, fentradacampana
+        order by criterio_prio, dh_campaign_entry
     ) = 1
 )
 
 select
     opportunity_number,
     try_to_number(id_prospect) as id_prospect,
-    medio_cdm              as medio_lead,
-    canal_cdm              as canal_lead,
-    medio_esp,
-    clasificacion_submedio,
-    ds_company,
-    ds_tipologia_campana,
+    source_cdm,
+    channel_cdm,
+    source_esp,
+    source_subcategory,
+    company_name,
+    ds_camapaign_type,
     dh_prospect_creation,
-    origen,
-    campana,
+    ds_origin,
+    campaign_name,
+    ds_business_model,
     io,
-    fentradacampana,
+    dh_campaign_entry,
     criterio
 from picked
 order by id_prospect

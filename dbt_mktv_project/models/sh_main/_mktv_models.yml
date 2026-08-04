@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fact_mktv_visitas
+  - name: fact_mkt_capta_visit
     description: "Tabla con los datos de Visitas"
     config:
       tags: [sh_main, yukon]
@@ -14,7 +14,7 @@ models:
         description: "Identificador de la Visita"
         tests:
           - not_null
-  - name: fact_mktv_transt_visitas
+  - name: fact_mkt_capta_visit_criteria
     description: "Tabla con los datos de Visitas"
     config:
       tags: [sh_main, yukon]
