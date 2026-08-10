@@ -13,3 +13,5 @@ create or replace dbt project DB_MARKETING.SH_STAGING.DBT_MKTV_PROJECT
 
     
     SHOW api integrations;
+
+    describe view vw_stg_prospect_consolidated;

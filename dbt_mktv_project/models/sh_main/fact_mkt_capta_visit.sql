@@ -1,12 +1,5 @@
--- =============================================================================
--- fact_mktv_visitas
--- foto diaria, 1 fila/prospecto.
--- Ensamblaje minimo: passthrough del spine (ya trae identidad + salida de los 5 modelos).
--- Merge por id_prospecto; watermark = ssfultmodifica (MAX event_datetime del estado).
--- =============================================================================
-
 with spine as (
-    select * from {{ ref('stg_prospect_consolidated') }}
+    select * from {{ ref('vw_stg_prospect_consolidated') }}
 )
 
 select
@@ -44,7 +37,7 @@ select
     source_esp,
     source_subcategory,
     company_name,
-    ds_camapaign_type,
+    ds_campaign_type,
     campaign_name,
     campaign_creation,
     ds_business_model,

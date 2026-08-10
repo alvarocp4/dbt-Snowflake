@@ -96,23 +96,37 @@ due_to_opp as (
             and closed.number_integration_id is not null
     ) closed
     join base_created on closed.opportunity_number = base_created.opportunity_number
+),
+
+calculated_fields as (
+    select
+        created.opportunity_number,
+        created.id_prospect,
+        created.ownership_subchannel,
+        coalesce(created.cost_center, assigned.cost_center, updated.raw_cost_center)            as actual_cost_center,
+        updated.raw_cost_center                                                                 as previous_cost_center,
+        iff(tlvanu.id_prospect is not null, 1, 0)                                               as is_tlvanu_flg,
+        iff(due_to_opp.id_prospect is not null, 1, 0)                                           as is_due_to_opp_flg,
+        case
+            when actual_cost_center = '89' then coalesce(updated.prev_cost_center, actual_cost_center)
+            when actual_cost_center = '892' and (is_tlvanu_flg = 1 or is_due_to_opp_flg = 1) then coalesce(updated.prev_cost_center, actual_cost_center)
+            else actual_cost_center
+        end                                                                                     as cost_center
+    from created
+    left join assigned          on assigned.id_prospect = created.id_prospect
+    left join updated           on updated.id_prospect = created.id_prospect
+    left join tlvanu            on tlvanu.id_prospect = created.id_prospect
+    left join due_to_opp        on due_to_opp.id_prospect = created.id_prospect
+    order by id_prospect desc
 )
 
 select
-    created.opportunity_number,
-    created.id_prospect,
-    created.ownership_subchannel,
-    coalesce(created.cost_center, assigned.cost_center, updated.raw_cost_center)            as actual_cost_center,
-    updated.raw_cost_center                                                                 as previous_cost_center,
-    iff(tlvanu.id_prospect is not null, 1, 0)                                               as is_tlvanu_flg,
-    iff(due_to_opp.id_prospect is not null, 1, 0)                                           as is_due_to_opp_flg,
-    case
-        when actual_cost_center = '89' then updated.prev_cost_center
-        when actual_cost_center = '892' and (is_tlvanu_flg or is_due_to_opp_flg) then updated.prev_cost_center
-        else actual_cost_center
-    end                                                                                     as cost_center
-from created
-left join assigned          on assigned.id_prospect = created.id_prospect
-left join updated           on updated.id_prospect = created.id_prospect
-left join tlvanu            on tlvanu.id_prospect = created.id_prospect
-left join due_to_opp        on due_to_opp.id_prospect = created.id_prospect
+    opportunity_number,
+    id_prospect,
+    ownership_subchannel,
+    actual_cost_center,
+    previous_cost_center,
+    is_tlvanu_flg,
+    is_due_to_opp_flg,
+    cost_center
+from calculated_fields

@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_cost_center
+  - name: vw_stg_cost_center
     description: "View con las Oportunidades creadas conservando el último Prospecto"
     config:
       tags: [sh_staging, yukon]
@@ -14,7 +14,7 @@ models:
           - not_null
           - unique
           
-  - name: stg_opportunity_current_state
+  - name: vw_stg_opportunity_current_state
     description: "View con las Visitas y el ultimo estado"
     config:
       tags: [sh_staging, yukon]
@@ -30,7 +30,7 @@ models:
           - not_null
           - unique
           
-  - name: stg_lead_medio_canal
+  - name: vw_stg_lead_source_channel
     description: "View con los Prospectos con el cambio de Centro de Coste"
     config:
       tags: [sh_staging, yukon]
@@ -40,7 +40,7 @@ models:
       - name: id_prospect
         description: "Identificador único del Prospecto"
         
-  - name: stg_campaign_crea
+  - name: vw_stg_campaign_crea
     description: "View con los Prospectos con el cambio de Centro de Coste"
     config:
       tags: [sh_staging, yukon]
@@ -50,7 +50,7 @@ models:
       - name: id_prospect
         description: "Identificador único del Prospecto"
         
-  - name: stg_foto_crea_criteria
+  - name: vw_stg_foto_crea_criteria
     description: "View con los Prospectos con el cambio de Centro de Coste"
     config:
       tags: [sh_staging, yukon]
@@ -60,7 +60,7 @@ models:
       - name: id_prospect
         description: "Identificador único del Prospecto"
         
-  - name: stg_prospect_consolidated
+  - name: vw_stg_prospect_consolidated
     description: "View con los Prospectos con el cambio de Centro de Coste"
     config:
       tags: [sh_staging, yukon]

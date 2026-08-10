@@ -13,7 +13,8 @@ with src_data_profile as (
 related_criteria as (
     select
         id_prospect_related                                                 as id_prospect,
-        coalesce(prospect_creation_campaign, prospect_original_campaign)    as campaign_crea_related
+        coalesce(prospect_creation_campaign, prospect_original_campaign)    as campaign_crea_related,
+        dh_visit_crea
     from src_data_profile
     where prospect_creation_campaign is not null
       and prospect_creation_campaign not in ('','SP_PbkCalls','SP_RunScript','SP_AsignMkt','SP_AsignManager','SP_AsignOthers')
@@ -29,7 +30,8 @@ related_criteria as (
 first_criteria as (
     select
         id_prospect,
-        iff(upper(prospect_creation_campaign) like '%REFERIDO%', prospect_related_campaign, prospect_creation_campaign)     as campaign_crea_crit_1
+        iff(upper(prospect_creation_campaign) like '%REFERIDO%', prospect_related_campaign, prospect_creation_campaign)     as campaign_crea_crit_1,
+        dh_visit_crea
     from src_data_profile
     where prospect_creation_campaign is not null
       and prospect_creation_campaign not in ('','SP_PbkCalls','SP_RunScript','SP_AsignMkt','SP_AsignManager','SP_AsignOthers')
@@ -45,7 +47,8 @@ first_criteria as (
 second_criteria as (
     select
         id_prospect,
-        prospect_original_campaign          as campaign_crea_crit_2
+        prospect_original_campaign          as campaign_crea_crit_2,
+        dh_visit_crea
     from src_data_profile
     where prospect_original_campaign is not null
       and prospect_original_campaign not in ('','SP_PbkCalls','SP_RunScript','SP_AsignMkt','SP_AsignManager','SP_AsignOthers')
@@ -66,7 +69,8 @@ second_criteria as (
 fourth_criteria as (
     select
         id_prospect,
-        campaign_name            as campaign_crea_crit_4
+        campaign_name            as campaign_crea_crit_4,
+        dh_visit_crea
     from src_data_profile
     where campaign_name is not null
       and campaign_name not in ('','SP_PbkCalls','SP_RunScript','SP_AsignMkt','SP_AsignManager','SP_AsignOthers')
@@ -92,25 +96,41 @@ agent_criteria as (
         partition by upper(src_total_agents.matricula) 
         order by src_total_agents.campania_actual
     ) = 1
+),
+
+calculated_fields as (
+    select
+        stg_opportunity.opportunity_number,
+        stg_opportunity.id_prospect,
+        coalesce(
+            related_criteria.campaign_crea_related,
+            first_criteria.campaign_crea_crit_1,
+            second_criteria.campaign_crea_crit_2,
+            src_campaign_crea.campana_crea_real,
+            fourth_criteria.campaign_crea_crit_4,
+            agent_criteria.campaign_altitude,
+            'No Identificado'
+        )           as campaign_creation,
+        coalesce (
+            related_criteria.dh_visit_crea,
+            first_criteria.dh_visit_crea,
+            second_criteria.dh_visit_crea,
+            fourth_criteria.dh_visit_crea,
+            null
+        )           as dh_visit_crea
+    from {{ ref('vw_stg_opportunity_current_state') }} stg_opportunity
+    left join related_criteria       on stg_opportunity.id_prospect = related_criteria.id_prospect
+    left join first_criteria         on stg_opportunity.id_prospect = first_criteria.id_prospect
+    left join second_criteria        on stg_opportunity.id_prospect = second_criteria.id_prospect
+    left join fourth_criteria        on stg_opportunity.id_prospect = fourth_criteria.id_prospect
+    left join agent_criteria         on upper(stg_opportunity.booker_user) = agent_criteria.id_user
+    left join {{ source('odin_staging', 'src_mktv_campana_crea_contactcenter') }} src_campaign_crea
+        on stg_opportunity.id_prospect = src_campaign_crea.id_prospecto
 )
 
 select
-    stg_opportunity.opportunity_number,
-    stg_opportunity.id_prospect,
-    coalesce(
-        related_criteria.campaign_crea_related,
-        first_criteria.campaign_crea_crit_1,
-        second_criteria.campaign_crea_crit_2,
-        src_campaign_crea.campana_crea_real,
-        fourth_criteria.campaign_crea_crit_4,
-        agent_criteria.campaign_altitude,
-        'No Identificado'
-    )           as campaign_creation
-from {{ ref('stg_opportunity_current_state') }} stg_opportunity
-left join related_criteria      on stg_opportunity.id_prospect = related_criteria.id_prospect
-left join first_criteria        on stg_opportunity.id_prospect = first_criteria.id_prospect
-left join second_criteria       on stg_opportunity.id_prospect = second_criteria.id_prospect
-left join fourth_criteria       on stg_opportunity.id_prospect = fourth_criteria.id_prospect
-left join agent_criteria        on upper(stg_opportunity.booker_user) = agent_criteria.id_user
-left join {{ source('odin_staging', 'src_mktv_campana_crea_contactcenter') }} src_campaign_crea
-    on stg_opportunity.id_prospect = src_campaign_crea.id_prospecto
+    opportunity_number,
+    id_prospect,
+    campaign_creation,
+    dh_visit_crea
+from calculated_fields
